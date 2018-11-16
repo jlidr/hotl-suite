@@ -1,0 +1,70 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+10.233.243.6	ip-10-233-243-6.ec2.internal	ip-10-233-243-6   avf-ds-a1
+10.233.243.22	ip-10-233-243-22.ec2.internal	ip-10-233-243-22  avf-ds-a2
+
+#  Dev AVF systems
+10.239.60.5     avf-ds-qa1	ip-10-239-60-5.ec2.internal     ip-10-239-60-5
+10.239.60.37    avf-ds-qa2	ip-10-239-60-37.ec2.internal    ip-10-239-60-37
+#34.202.207.224    avf-ds-qa1     avf-ds-qa1.wsi.com
+#34.236.13.73     avf-ds-qa2     avf-ds-qa2.wsi.com
+10.239.60.20	avf-ds-qb1	ip-10-239-60-20.ec2.internal	ip-10-239-60-20
+10.239.60.40	avf-ds-qb2	ip-10-239-60-40.ec2.internal	ip-10-239-60-40
+#35.172.253.125	avf-ds-qb1	avf-ds-qb1.wsi.com
+#18.204.118.142	avf-ds-qb2	avf-ds-qb2.wsi.com
+
+18.232.194.49	avf-ds-qa-b	avf-ds-qa-b.wsi.com
+
+#  Old address - lost when avf-ds-qa2 was rebuilt 2018-01-08
+#34.229.183.81    avf-ds-qa2     avf-ds-qa2.wsi.com
+
+# LDM
+10.142.185.111	ford-ldm1.wsicorp.com
+10.142.185.112	ford-ldm2.wsicorp.com
+10.142.164.111	ford-dev-ldm1.wsicorp.com
+
+# Lightning
+10.142.185.221	ford-ldm1-lightning.wsicorp.com
+10.142.185.222	ford-ldm2-lightning.wsicorp.com
+10.142.164.209  ford-dev-ldm1-lightning.wsicorp.com
+
+# Radar Raw
+10.142.185.225	ford-ldm1-radar-raw.wsicorp.com
+10.142.185.226	ford-ldm2-radar-raw.wsicorp.com
+10.142.164.211	ford-dev-ldm1-radar-raw.wsicorp.com
+
+# Radar Processed
+10.142.185.223	ford-ldm1-radar-proc.wsicorp.com
+10.142.185.224	ford-ldm2-radar-proc.wsicorp.com
+10.142.164.210	ford-dev-ldm1-radar-proc.wsicorp.com
+
+# Grid North America
+10.142.185.213	ford-ldm1-grid-na.wsicorp.com
+10.142.185.214	ford-ldm2-grid-na.wsicorp.com
+10.142.164.205	ford-dev-ldm1-grid-na.wsicorp.com
+
+# Grid Europe
+10.142.185.209	ford-ldm1-grid-eu.wsicorp.com
+10.142.185.210	ford-ldm2-grid-eu.wsicorp.com
+10.142.164.203	ford-dev-ldm1-grid-eu.wsicorp.com
+
+# Grid WSI
+10.142.185.217	ford-ldm1-grid-wsi.wsicorp.com
+10.142.185.218	ford-ldm2-grid-wsi.wsicorp.com
+10.142.164.207	ford-dev-ldm1-grid-wsi.wsicorp.com
+
+# Grid High Priority (Energy)
+10.142.185.211	ford-ldm1-grid-hipri.wsicorp.com
+10.142.185.212	ford-ldm2-grid-hipri.wsicorp.com
+10.142.164.204	ford-dev-ldm1-grid-hipri.wsicorp.com
+
+
+# Grid TWC
+10.142.185.215	ford-ldm1-grid-twc.wsicorp.com
+10.142.185.216	ford-ldm2-grid-twc.wsicorp.com
+10.142.164.206	ford-dev-ldm1-grid-twc.wsicorp.com
+
+# Grid Collection
+10.142.185.207	ford-ldm1-grid-coll.wsicorp.com
+10.142.185.208	ford-ldm2-grid-coll.wsicorp.com
+10.142.164.202	ford-dev-ldm1-grid-coll.wsicorp.com

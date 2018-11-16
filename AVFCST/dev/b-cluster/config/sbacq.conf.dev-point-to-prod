@@ -1,0 +1,109 @@
+# sbacq config file
+#
+# WINDS feed:
+#  WINDS requires a hostname and port to connect, and a user id and password to 
+#  authenticate.  The service name and options are used to determine which 
+#  WINDS data service to use (default is "skybase" and "send").  
+#  windsConnInterval is the number of seconds to wait after disconnecting
+#  before trying to reconnect to WINDS.
+#
+windsHost = winds.wsi.com
+#windsProxy = winds.wsi.com
+windsPort = 80
+#windsUser = 99715 
+windsUser = 50691 
+windsPass = @vfH0tl
+windsServiceName = skybase
+windsServiceOpts = send
+windsResendOpts = resend
+windsConnInterval = 6
+#
+# HCSN feed:
+#  HCSN requires a hostname and port to connect, and a user id for
+#  resends
+#  hcsnConnInterval is the number of seconds to wait after disconnecting
+#  before trying to reconnect to HCSN.
+#
+#hcsnHost = sysp
+#hcsnPort = 10023
+#hcsnUser = 0
+#hcsnConnInterval = 6
+
+# Client Upload Configuration
+#  Client Upload POSTs data from the client back to the Distribution
+#  server, such that client health can be monitored at a central place.
+#  The following parameters should be set if the Upload is using a different
+#  server than the normal WINDS server. These parameters are most useful
+#  for testing such that a server can POST back to the non-production
+#  WINDS. Normally these parameters can be commented out since the 
+#  application defaults back to the winds parameters if none are configured.
+#  There is no override for the windsUser/Pass. The URL should only be changed
+#  if the script is moved on the WINDS server. 
+#clientUploadHost = winds.wsi.com
+#clientUploadProxy = winds.wsi.com
+#clientUploadPort = 80
+clientUploadURL = /service/skybase/upload
+clientUploadTypeDefault = log
+
+#
+# Directories:
+#  logDir is where log files are put.
+#  errDir is current not used, but intended for saving files that could not be
+#         processed, but should be processed later (e.g. data out-of-order,
+#         data submitted while database is down, etc.)
+#  tmpDir is the working directory for files still being processed.
+#  finalDir
+#  requestDir
+#  clientUploadDir is a directory that gets scanned by sbacqClientUpload. Any
+#         file in this directory (static only) will get uploaded through 
+#         the WINDS server. 
+#  binDir is where the binary executables are.
+#
+logDir = /u2/skybase/logs
+errDir = /u2/skybase/errdir
+tempDir = /u2/skybase/tmp 
+finalDir = /u2/skybase/downloads
+requestDir = /u2/skybase/requests
+clientUploadDir = /u2/skybase/client_uploads
+binDir = /u2/skybase/bin
+
+#
+#  Level of detail used for logging.  Log information will be issue for all
+#  log levels higher than the selected level.  
+#  The allowed levels are as follows, from highest to lowest: 
+#    FATAL, ERROR, WARN, INFO, NOTICE, DEBUG, DEBUG2, DEBUG3, DEBUG4, DEBUG5
+#
+logLevel = NOTICE 
+
+#
+#  File transfer configuration
+#    -Log Level
+#    -Delete the part files of a larger file when done assembling
+#
+ftLogLevel = INFO
+ftDelPartFiles = 1
+
+#
+# Skybase database connection
+#  The host, port, database name, and user id can all be specified.
+#  The password is notably absent, and must be dealt with somehow.
+#  Putting it here has poor security properties, but might be the simplest
+#  approach.
+#  dbConnInterval is the number of seconds to wait after disconnecting
+#  before trying to reconnect to the database. 
+#
+dbHost = localhost
+dbPort = 5432
+dbName = skybase
+dbUser = wsi_provider
+dbConnInterval = 5
+dbOpts = application_name=sbacq
+dbConnPoolSize = 16
+
+#
+# Product size in bytes at which we use files instead of memory for WIMP chunks.
+#   This only applies to products that are transferred in a single WIMP segment.
+#   Products segmented across more than one WIMP chunk are always processed 
+#   using temporary files.
+#
+maxInMemorySize = 65536
