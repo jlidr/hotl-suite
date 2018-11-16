@@ -1,0 +1,17 @@
+#!/bin/bash
+#  /longview/etc/north_america_sites.list is the list of North American sites (the master). 
+#        Needs to be based on the 5-digit IDs
+#  $1 is the 30yr monthly data file of 805 global sites. Uses primarily the 5-digit IDs
+#  
+#  The output is the lines from the 30yr monthly file that match the list of North American sites
+#  to be used as the departures from the 10yr climatology
+#
+LIST="/longview/etc/north_america_sites.list"
+FCST30YR=${1}
+
+echo "Using ${LIST} as base site list"
+echo "Reading in ${FCST30YR} as 30yr forecast data"
+
+awk 'NR==FNR{a[$1];next} $1 in a{print}' ${LIST} ${FCST30YR}
+###awk 'NR==FNR{a[$1];next} $1 in a{print $1}' ${LIST} ${FCST30YR}
+

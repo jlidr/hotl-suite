@@ -1,0 +1,10 @@
+This repository holds the scripts and config files for the LongView LDM server.
+
+The directory LDM holds the LDM config files and the crontab and incrontab configuration.
+
+The directory bin holds the scripts located in /usr/local/bin
+
+The directory wsi_svc holds the crontab and incrontab configuration for user wsi_svc.
+
+The directory etc holds the files in /longview/etc that control the status for primary/backup as well as the north_america_site.list file.
+

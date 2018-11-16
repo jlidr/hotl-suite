@@ -1,0 +1,4 @@
+# Crontab for user LDM
+#
+ 4 0 * * * $HOME/bin/ldmadmin newlog >/dev/null 2>&1
+ 07 * * * * /usr/local/bin/purge_LongView.sh > /dev/null 2>&1

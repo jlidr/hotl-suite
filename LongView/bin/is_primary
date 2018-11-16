@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# is_primary
+#   Script to check whether this system is part of the pair of systems that is running as the Primary Live pair.
+#
+
+if [ `hostname --short` == `cat /longview/etc/primarySystemName` ]; then
+    # I am Primary Live
+    #exit 0
+    echo 0
+else
+    # I am not primary
+    echo 1
+fi
+exit 1

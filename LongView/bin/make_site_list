@@ -1,0 +1,7 @@
+awk -F, '{
+if ( $5 >-130 && $5 < -50)
+   if ($2 =="" )
+      print $3;
+   else
+      print $2;
+}' GlobalLongviewList.csv > output_site_list.txt

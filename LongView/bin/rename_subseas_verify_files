@@ -1,0 +1,183 @@
+#!/bin/bash
+#
+# Copy the published LongView subseasonal verification files passed in as $1 to a unique 
+#  name then insert it into the LDM queue.  This is for the Subseasonal verification files
+#  coming from LongView and heading for the energy-research1 system.
+#
+##########################################################################################
+PATH=/usr/local/bin:/bin:$PATH
+export PATH
+
+umask 0000
+_LOGFILE=/longview/logs/verification_file.
+DATE=`date -u "+%Y%m%dT%H%M%S"`
+
+# Directory in which to find the files
+SRC_DIR="/longview/Pub/verify"
+DEST_DIR="/longview/Pub/out/verify"
+
+#echo "Operating on $1"
+
+# Sample input file names from LongView publisher
+#   Subseasonal (weekly) temperatures (for North America and Europe)
+# /longview/Pub/verify/subseasonal_Tc_EUR_Week3_20181018.txt
+# /longview/Pub/verify/subseasonal_Tc_EUR_Week4_20181018.txt
+# /longview/Pub/verify/subseasonal_Tc_EUR_Week5_20181018.txt
+# /longview/Pub/verify/subseasonal_Tc_NA_Week3_20181018.txt
+# /longview/Pub/verify/subseasonal_Tc_NA_Week4_20181018.txt
+# /longview/Pub/verify/subseasonal_Tc_NA_Week5_20181018.txt
+#
+#   The WINC names are divided into 9 fields. See https://docs.google.com/document/d/1beYoLzCgjYvE8pegltpzNPk1XCiZlYf_YOMjZrabZqQ/edit#
+#   for details.
+#
+# Initialize things with nonsense values
+
+echo "$0 processing file         $1" | /usr/local/bin/datelogin ${_LOGFILE}
+# Decompose the filename passed in
+#     Get the forecast type to indentify which of the three types it contains 
+#     (Seasonal ^month, Subseasonal ^subseasonal, Rollup ^sea)
+first=`echo $1 | cut -c 1-3`
+###echo "first is $first"
+
+if [ "$first" = "sub" ]
+then
+    #  Set the flags to values to represent the data type as subseasonal
+    #
+###    echo "  found subseasonal"
+    forecast_type="wsi_subseasonal"
+else
+    #  Set the flags to values to represent the data type as unexpected
+    #
+    echo "  do not know what was found"
+    forecast_type="unknown"
+fi
+
+# Set the fields of the new file name (see Longview Published Files to WINC Name Pattern for more info)
+
+# Field 1 - TYPE
+#    This is always set to "rec" for all file types
+#
+TYPE="rec"
+#echo "TYPE is $TYPE"
+
+# Field 2 - SOURCE
+#    This contains either "wsi_seasonal" (for monthly and rollups) or "wsi_subseasonal" (for the weekly forecasts)
+#
+SOURCE=$forecast_type
+#echo "SOURCE is $SOURCE"
+
+# Field 3 - VALID
+#    This is a DateTtime string that refers to the start of the forecast data.
+#    The  --date="string description" feature on the 'date' command is very useful here.
+#    Be sure to use UTC time.
+#
+#  Initialize the VALID field to 00z today. Change it as needed for the different types and periods.
+VALID=`date -u +%Y%m%dT000000Z`
+
+week=`echo $1 | awk -F_ '{print $4}' | cut -c 5`
+VALID=`date -u --date="$week Monday" +%Y%m%dT000000Z`
+#echo "VALID is $VALID"
+
+# Field 4 - PUBTIME
+#    This is "now", the time the file is created and inserted into LDM.
+#
+PUBTIME=`date -u +%Y%m%dT%H%M%SZ`
+#echo "PUBTIME is $PUBTIME"
+
+# Field 5 - PERIOD_END
+#    This represents the number of days covered by the forecast period and the start
+#    of the first day of the forecast. Lots of other special rules based on forecast
+#    type. See the doc for details.
+#
+# Initialize it to a value that will be overwritten.
+DD="00"
+week=`echo $1 | awk -F_ '{print $4}' | cut -c 5`
+    #  Get the epoch time of the correct Monday and subtract the epoch time of today.
+    #  Divide by 86400 (seconds per day)
+    #target_monday=`date -u --date="$week Monday" +%s`
+    #today=`date -u --date="00z today" +%s`
+    #seconds=$(expr $target_monday - $today) 
+    #DD="$(expr $seconds / 86400)"
+DD="$(expr $week \* 7 )"
+##    echo "$0 DD is $DD" | /usr/local/bin/datelogin ${_LOGFILE}
+PERIOD_END="P${DD}DT00H00M"
+#echo "PERIOD_END is $PERIOD_END"
+
+# Field 6 - REGION
+#
+region=`echo $1 | awk -F_ '{print $3}' `
+#echo "region is $region"
+REGION=$region
+###echo "REGION is $REGION"
+
+# Field 7 - PARAM_LEN
+#    This is a combination of the parameter name and the forecast period length.
+#
+# Initialize to subseasonal (weekly) and change for seasonal and rollups as needed.
+LEN="P7D"
+param="TANOM"
+LEN=`echo $1 | awk -F_ '{print $4}'`
+
+PARAM_LEN="${param}@${LEN}"
+#echo "PARAM_LEN is $PARAM_LEN"
+
+# Field 8 - LEVEL
+#    This is always set to surface (SFC) because this data is never on other atmosphere levels.
+#
+LEVEL="SFC"
+###echo "LEVEL is $LEVEL"
+
+# Field 9 - EXT
+#    This indicates the type of data contained within. This is location-value data, so simple text.
+#
+EXT="txt"
+###echo "EXT is $EXT"
+
+# Build the new file name
+NEW_FILE=$TYPE.$SOURCE.$VALID.$PUBTIME.$PERIOD_END.$REGION.$PARAM_LEN.$LEVEL.$EXT
+
+echo "$1       turns into  "
+echo $NEW_FILE
+
+# Quit out early when debugging
+###exit 0
+
+#--------------------------
+# Use mv in operations to allow new files to be written without conflict.
+mv ${SRC_DIR}/$1 ${DEST_DIR}/$NEW_FILE
+#chmod ug+w ${DEST_DIR}/$NEW_FILE
+
+if [ -e "${SRC_DIR}/$1" ]
+then
+        echo "${SRC_DIR}/$1 did not get removed. Force it." | /usr/local/bin/datelogin ${_LOGFILE}
+        rm -f ${SRC_DIR}/$1
+fi
+
+# Insert the file into the LDM queue if and only if you are running on the Live Primary system
+if [ `/usr/local/bin/is_primary` -ne 0 ]
+then
+    echo "$0 ---- not primary ---- No insert to LDM queue ($NEW_FILE)." | /usr/local/bin/datelogin ${_LOGFILE}
+    exit 0
+fi
+
+# Insert the file into the LDM queue.
+RET="`/opt/ldm/bin/pqinsert -v -l - -i -f WSI -p $NEW_FILE $DEST_DIR/$NEW_FILE 2>&1`"
+RETVAL=$?
+if [ $RETVAL -eq 0 ]
+then
+    echo "$0 : SUCCESSFUL insertion to LDM : $NEW_FILE" | /usr/local/bin/datelogin ${_LOGFILE}
+    # Send the SIGCONT to alert listeners to the arrival of the data immediately
+    LDMD_PID=`cat ~ldm/ldmd.pid`
+    kill -s CONT -$LDMD_PID
+else
+    (
+	echo
+	echo "$0"
+	echo "    FAILED to insert $DEST_DIR/$NEW_FILE to LDM."
+	echo "      Return Value: $RETVAL"
+	echo "      $RET"
+    ) | /usr/local/bin/datelogin ${_LOGFILE}
+
+fi
+
+exit 0

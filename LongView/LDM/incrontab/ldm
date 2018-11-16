@@ -1,0 +1,6 @@
+# 0 is a template for the incrontab file for LDM on the RadarPlus LDM server
+# 0 the seasonal and subseasonal published and verify files
+/longview/Pub IN_MOVED_TO /usr/local/bin/rename_published_files $#
+# 0 the HOTLBackup.xml file to the other production server
+## 0 is no longer necessary with 6.7.1001.28 - the server writes to the S3 bucket directly
+##/longview/XML IN_CLOSE_WRITE /usr/local/bin/rename_longview_dbbackup $#
