@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rqt_converter_configuration>
+  <sources>
+    <source>
+      <!-- <path>C:\WSI\RqtConverterIngest</path>
+      -->
+      <path>\\10.0.1.10\radarplus\noQC</path>
+      <patterns>
+        <pattern>^grid.*\.grb(|2)$</pattern>
+        <pattern>^img.*$</pattern>
+      </patterns>
+      <ignore_patterns>
+        <pattern>^.*\.lock$</pattern>
+      </ignore_patterns>
+    </source>
+  </sources>
+</rqt_converter_configuration>

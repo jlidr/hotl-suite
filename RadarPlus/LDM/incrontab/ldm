@@ -1,0 +1,5 @@
+# 0 is a template for the incrontab file for LDM on the RadarPlus LDM server
+# 0 the Radar Filter files and PreSite List files
+/radarplus IN_MOVED_TO /usr/local/bin/rename_radar_file $#
+# 0 the HOTLBackup.xml file to the other production server
+/radarplus/XML IN_CLOSE_WRITE /usr/local/bin/rename_radar_dbbackup $#

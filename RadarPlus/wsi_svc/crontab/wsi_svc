@@ -1,0 +1,7 @@
+# Crontab for user LDM
+#
+#  Look every 5 minutes for old wrqt files
+ 0-59/5 * * * * /usr/local/bin/purge_wrqt > /dev/null 2>&1
+#
+#  Look every hour for old, empty directories
+ 3 * * * * /usr/local/bin/purge_dirs > /dev/null 2>&1

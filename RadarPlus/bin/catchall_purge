@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# Script to be run from cron to clean out old data files from the /radarplus tree.
+# 
+PURGE_DIR=/radarplus
+
+# Purge age in days
+PURGE_AGE=3
+
+# Files in backup and Pub are owned by LDM.
+find ${PURGE_DIR} -type f -mtime +${PURGE_AGE} -exec /usr/local/bin/log_and_remove {} \; 
+
+#
+#echo "Done."

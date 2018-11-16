@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+# Copy the RadarPlus file passed in as $1 to a unique winc name then insert it into the LDM queue
+#  This is for the PreSiteList and RadarFilter files coming from RadarPlus and heading for the RadarMosaic
+#
+DATE=`date "+%Y%m%dT%H%M%S"`
+#echo $DATE
+
+# Directory in which to find the files
+SRC_DIR="/radarplus"
+#echo $SRC_DIR
+DEST_DIR="/radarplus/Pub"
+#echo $DEST_DIR
+
+# Get the tile sector
+SECTOR=`echo $1 | cut -c -5`
+#echo $SECTOR
+
+# Get the data type (PreSiteList or RadarFilter)
+TYPE=`echo $1 | cut -c 7-17`
+#echo $TYPE
+
+# Fill in WINC name bits that are static in this case
+REF_FCST="NIL.P0D"
+VERT_LEVEL="SFC"
+
+# Build the new file name
+NEW_FILE=rec.radarplus.${DATE}Z.$REF_FCST.$SECTOR.$TYPE.$VERT_LEVEL.txt
+
+# Use mv in operations to allow new files to be written without conflict.
+mv ${SRC_DIR}/$1 ${DEST_DIR}/$NEW_FILE
+chmod ug+w ${DEST_DIR}/$NEW_FILE
+
+# Insert the file into the LDM queue
+/opt/ldm/bin/pqinsert -v -l /opt/ldm/var/logs/ldmd.log -f WSI -i $DEST_DIR/$NEW_FILE -p $NEW_FILE 
+
+# Send the SIGCONT to alert listeners to the arrival of the data immediately
+LDMD_PID=`cat ~ldm/ldmd.pid`
+kill -s CONT -$LDMD_PID
+
+# Remove inserted files after N minutes (12 hours = 720 minutes)
+MINS_OLD=720
+find $DEST_DIR -mmin +$MINS_OLD -exec /usr/local/bin/log_and_remove {} \;
+

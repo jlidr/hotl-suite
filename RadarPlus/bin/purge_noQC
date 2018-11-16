@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# Script to be run from cron to clean out old data files from the /radarplus/noQC directory tree.
+# 
+PURGE_DIR=/radarplus/noQC
+
+# Purge age in minutes
+PURGE_AGE=15
+
+# Files in backup and Pub are owned by LDM.
+find ${PURGE_DIR} -type f -mmin +${PURGE_AGE} -exec /usr/local/bin/log_and_remove {} \; 
+
+#
+#echo "Done."

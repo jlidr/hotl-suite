@@ -1,0 +1,68 @@
+#!/bin/bash
+#
+# Copy the RadarPlus database backup file passed in as $1 to a unique WINC
+#  name then insert it into the LDM queue
+#
+# 24-Oct-2017	o initial
+#
+################################################################################
+PATH=/usr/local/bin:/bin:$PATH
+export PATH
+
+umask 0000
+DATE=`date "+%Y%m%dT%H%M%S"`
+_LOGFILE="/radarplus/logs/dbbackup."
+
+# Directory in which to find the files
+SRC_DIR="/radarplus/XML"
+BACKUP_DIR="/radarplus/backup"
+cd $SRC_DIR
+
+# Get the hostname
+HOST_NAME=`hostname -s`
+
+# Declare the TYPE
+TYPE="dbbackup"
+
+# Fill in WINC name bits that are static in this case
+REF_FCST="NIL.P0D"
+VERT_LEVEL="NIL"
+
+# Build the new file name
+NEW_FILE=rec.radarplus.${DATE}Z.$REF_FCST.$HOST_NAME.$TYPE.$VERT_LEVEL.xml
+
+# Be sure the passed file exists
+if [ -z "$1" ]
+then
+    echo "$0 : Source file (argument) not supplied.  Exit." | /usr/local/bin/datelogin ${_LOGFILE}
+    sleep 2
+    exit 1
+fi
+if [ ! -s ${SRC_DIR}/$1 ]
+then
+    echo "$0 : Unable to insert file to queue - Source file (${SRC_DIR}/$1) does not exist." | /usr/local/bin/datelogin ${_LOGFILE}
+    exit 1
+fi
+    
+# Copy the file. No need to remove the original.
+cp ${SRC_DIR}/$1 ${BACKUP_DIR}/$NEW_FILE
+chmod ug+w ${BACKUP_DIR}/$NEW_FILE
+
+# Insert the file into the LDM queue
+RET="`/opt/ldm/bin/pqinsert -v -l - -i -f WSI -p $NEW_FILE $BACKUP_DIR/$NEW_FILE 2>&1`"
+RETVAL=$?
+
+if [ $RETVAL -eq 0 ]
+then
+    echo "$0 : SUCESSFULLY inserted $BACKUP_DIR/$NEW_FILE to LDM." | /usr/local/bin/datelogin ${_LOGFILE}
+else
+    (
+	echo
+	echo "$0"
+	echo "    FAILED to insert $BACKUP_DIR/$NEW_FILE to LDM."
+	echo "      Return Value: $RETVAL"
+	echo "      $RET"
+    ) | /usr/local/bin/datelogin ${_LOGFILE}
+fi
+
+exit 0

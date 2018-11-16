@@ -1,0 +1,67 @@
+#!/bin/bash -x
+#
+# Copy the RadarPlus cluster server file passed in as $1 to a unique winc name then insert it
+#  into the LDM queue.  
+#  This is tell the radar cluster servers and the non-primary RadarPlus server which
+#  set of radar cluster servers are primary.
+#
+##########################################################################################
+PATH=/usr/local/bin:/bin:$PATH
+export PATH
+
+umask 0000
+_LOGFILE=/radarplus/logs/cluster_file.
+DATE=`date "+%Y%m%dT%H%M%S"`
+
+echo "$0 starting at $DATE with $1" | /usr/local/bin/datelogin ${_LOGFILE}
+
+# Directory in which to find the files
+SRC_DIR="/radarplus/etc"
+DEST_DIR="/radarplus/cluster"
+
+# Set the type to indicate the cluster
+TYPE="rec"
+SOURCE="radarplus"
+VALID=`date +%Y%m%dT%H%M%SZ`
+PUBTIME="NIL"
+PERIOD_END="P0D"
+REGION="NIL"
+PARAM_LEN="CLUSTER"
+LEVEL="SFC"
+EXT="txt"
+
+# Build the new file name
+NEW_FILE=$TYPE.$SOURCE.$VALID.$PUBTIME.$PERIOD_END.$REGION.$PARAM_LEN.$LEVEL.$EXT
+
+# Use cp in operations to ensure the source file is always present
+cp ${SRC_DIR}/$1 ${DEST_DIR}/$NEW_FILE
+chmod ug+w ${DEST_DIR}/$NEW_FILE
+
+# Insert the file into the LDM queue if and only if you are running on the Live Primary system
+if [ `/usr/local/bin/is_primary` -ne 0 ]
+then
+    echo "$0 ---- not primary ---- No insert to LDM queue ($NEW_FILE)." | /usr/local/bin/datelogin ${_LOGFILE}
+    exit 0
+fi
+
+# Insert the file into the LDM queue.
+RET="`/opt/ldm/bin/pqinsert -v -l - -i -f WSI -p $NEW_FILE $DEST_DIR/$NEW_FILE 2>&1`"
+RETVAL=$?
+if [ $RETVAL -eq 0 ]
+then
+    echo "$0 : SUCCESSFUL insertion to LDM : $NEW_FILE" | /usr/local/bin/datelogin ${_LOGFILE}
+    # Send the SIGCONT to alert listeners to the arrival of the data immediately
+    LDMD_PID=`cat ~ldm/ldmd.pid`
+    kill -s CONT -$LDMD_PID
+else
+    (
+	echo
+	echo "$0"
+	echo "    FAILED to insert $DEST_DIR/$NEW_FILE to LDM."
+	echo "      Return Value: $RETVAL"
+	echo "      $RET"
+    ) | /usr/local/bin/datelogin ${_LOGFILE}
+
+fi
+
+exit 0

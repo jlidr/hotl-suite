@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# Copy the NoQC RQT file passed in as $* (because it has spaces in the names)
+#    to a unique winc name then insert it into the LDM queue.  The DSSEG
+#    program process_incoming feeds the full path and filename to this script.
+#    It removes the file in the process, so this script does not need to
+#    worry about cleaning up.
+#
+# Build the new file name
+#  /radarplus/noQC/Image/High Quality Global Radar No QC Tile 1 1km/Base Reflectivity/SFC/2017.07.27_02/Image/T_2017.07.27_02.05.00_V1.wrqt
+#
+################################################################################
+PATH=/usr/local/bin:/bin:$PATH
+export PATH
+
+NEW_FILE=$*
+umask 0000
+_LOGFILE=/radarplus/logs/rename_noqc_output.log.
+
+# Remove the "/radarplus/noQC/" from the string passed in to get just what the DFC requires on LDM.
+INSERT_FILENAME=`echo ${NEW_FILE} | cut -c 17-`
+echo "Processing: $INSERT_FILENAME" | /usr/local/bin/datelogin ${_LOGFILE}
+
+# Go to the directory that contains what is left in the string.
+#
+cd /radarplus/noQC
+
+# Insert the file into the LDM queue. Capture the return message.
+MSG=`/opt/ldm/bin/pqinsert -v -l - -f WSI -p "${INSERT_FILENAME}" "${NEW_FILE}" 2>&1`
+RET=$?
+
+if [ $RET -eq 0 ]
+then
+    # Successful insertion. Clean out the file.
+    rm -f "$NEW_FILE"
+    echo "    SUCCESSFUL insert of ${NEW_FILE}" | /usr/local/bin/datelogin ${_LOGFILE}
+else
+    # Check the message for error conditions
+    if [[ "$MSG" =~ ERROR ]]; then
+	# Disregard the benign error caused by another system being faster.
+	if [[ "$MSG" =~ "Product already in queue" ]]
+	then
+	    (
+		echo "    FAILED to insert $NEW_FILE to LDM.  Benign??"
+		echo "      Return Value: $RET"
+		echo "      $MSG"
+		echo "      Deleting file: ${NEW_FILE}"
+		echo
+	    ) | /usr/local/bin/datelogin ${_LOGFILE}
+
+	    # No problem. Clean out the file.
+	    rm -f "$NEW_FILE"
+	else
+	    (
+		echo "    FAILED to insert $NEW_FILE to LDM."
+		echo "      Return Value: $RET"
+		echo "      $MSG"
+		echo "      Copying file to  /radarplus/problems/${TILE_DIR}"
+		echo
+	    ) | /usr/local/bin/datelogin ${_LOGFILE}
+
+	    # Copy the problem file off for future study
+	    TILE_DIR=`echo ${NEW_FILE} | cut -c 55-60`
+	    mv "$NEW_FILE" /radarplus/problems/"$TILE_DIR"
+	fi
+    fi
+fi
+
+# Exit
+exit 0

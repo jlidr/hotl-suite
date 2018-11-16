@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+#  process_wrqts - pick up the .wrqt files generated on the HOTL server and insert them into LDM queue for DFC to pick up.
+#           DSSEG program             Config file to govern              Log file with YYMMDD
+/usr/local/bin/process_incoming -p /opt/ldm/bin/wrqt_watch.conf -l /opt/ldm/var/logs/proc_inc.log. &
+
+#  Remove old log files
+find /opt/ldm/var/logs -name "proc_inc.log*" -mtime +3 -exec rm {} \;

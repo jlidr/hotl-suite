@@ -1,0 +1,4 @@
+# Crontab for user LDM
+#
+07 0-23/4 * * * /usr/local/bin/catchall_purge > /dev/null 2>&1
+0-59/4 * * * * /usr/local/bin/purge_noQC > /dev/null 2>&1

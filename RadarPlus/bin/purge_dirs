@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# Script to be run from cron to clean out old empty data directories from the /radarplus/noQC directory tree.
+# 
+PURGE_DIR=/radarplus/noQC/Image/*
+
+# Purge age in minutes
+PURGE_AGE=120
+
+# Files and directories in noQC/Image are owned by wsi_svc
+find ${PURGE_DIR} -type d -mmin +${PURGE_AGE} -empty -delete
+
+#
+#echo "Done."

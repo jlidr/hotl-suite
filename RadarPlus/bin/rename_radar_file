@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# Copy the RadarPlus file passed in as $1 to a unique winc name then insert it
+#  into the LDM queue.  This is for the PreSiteList and RadarFilter files
+#  coming from RadarPlus and heading for the RadarMosaic
+#
+##########################################################################################
+PATH=/usr/local/bin:/bin:$PATH
+export PATH
+
+umask 0000
+_LOGFILE=/radarplus/logs/radar_file.
+DATE=`date "+%Y%m%dT%H%M%S"`
+
+echo "$0 starting at $DATE with $1" | /usr/local/bin/datelogin ${_LOGFILE}
+
+# Directory in which to find the files
+SRC_DIR="/radarplus"
+DEST_DIR="/radarplus/Pub"
+
+# Get the tile sector
+SECTOR=`echo $1 | cut -c -5`
+
+# Get the data type (PreSiteList or RadarFilter)
+TYPE=`echo $1 | cut -c 7-17`
+
+# Fill in WINC name bits that are static in this case
+REF_FCST="NIL.P0D"
+VERT_LEVEL="SFC"
+
+# Build the new file name
+NEW_FILE=rec.radarplus.${DATE}Z.$REF_FCST.$SECTOR.$TYPE.$VERT_LEVEL.txt
+
+# Use mv in operations to allow new files to be written without conflict.
+mv ${SRC_DIR}/$1 ${DEST_DIR}/$NEW_FILE
+chmod ug+w ${DEST_DIR}/$NEW_FILE
+if [ -e "${SRC_DIR}/$1" ]
+then
+	echo "${SRC_DIR}/$1 did not get removed. Force it." | /usr/local/bin/datelogin ${_LOGFILE}
+        rm -f ${SRC_DIR}/$1
+fi
+
+# Insert the file into the LDM queue if and only if you are running on the Live Primary system
+if [ `/usr/local/bin/is_primary` -ne 0 ]
+then
+    echo "$0 ---- not primary ---- No insert to LDM queue ($NEW_FILE)." | /usr/local/bin/datelogin ${_LOGFILE}
+    exit 0
+fi
+
+# Insert the file into the LDM queue.
+RET="`/opt/ldm/bin/pqinsert -v -l - -i -f WSI -p $NEW_FILE $DEST_DIR/$NEW_FILE 2>&1`"
+RETVAL=$?
+if [ $RETVAL -eq 0 ]
+then
+    echo "$0 : SUCCESSFUL insertion to LDM : $NEW_FILE" | /usr/local/bin/datelogin ${_LOGFILE}
+    # Send the SIGCONT to alert listeners to the arrival of the data immediately
+    LDMD_PID=`cat ~ldm/ldmd.pid`
+    kill -s CONT -$LDMD_PID
+else
+    (
+	echo
+	echo "$0"
+	echo "    FAILED to insert $DEST_DIR/$NEW_FILE to LDM."
+	echo "      Return Value: $RETVAL"
+	echo "      $RET"
+    ) | /usr/local/bin/datelogin ${_LOGFILE}
+
+fi
+
+exit 0
